@@ -3,167 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>少年禪修錄 - 插畫版</title>
+    <title>少年禪修錄 - 仙劍風格版</title>
     <style>
-        :root { --ink: #2C2C2C; --paper: #F2EFE9; --gold: #C5A059; --zen: #3D4F40; }
-        body { font-family: "PingFang TC", serif; background-color: #1a1a1a; margin: 0; padding: 0; display: flex; justify-content: center; height: 100vh; }
+        body { margin: 0; background: #000; font-family: "PingFang TC", serif; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
+        #game-container { width: 100%; max-width: 500px; height: 100%; background: #333; display: flex; flex-direction: column; position: relative; }
         
-        #game-screen {
-            width: 100%; max-width: 500px; height: 100%;
-            background: #F2EFE9; position: relative; display: flex; flex-direction: column; overflow: hidden;
+        /* 冒險走動區 */
+        #viewport { 
+            position: relative; width: 100%; height: 60%; 
+            background: #4A773C; /* 草地顏色 */
+            overflow: hidden; border-bottom: 4px solid #8B4513;
+        }
+        
+        /* 地圖裝飾 */
+        .obj { position: absolute; font-size: 30px; }
+        .temple { left: 180px; top: 50px; font-size: 60px; } /* 禪寺入口 */
+
+        /* 角色 */
+        #player { 
+            position: absolute; width: 40px; height: 40px; 
+            font-size: 35px; transition: 0.1s linear; 
+            display: flex; justify-content: center; align-items: center;
+            z-index: 100;
         }
 
-        /* 頂部數據面板 */
-        .stats-bar {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-            padding: 15px; background: rgba(255,255,255,0.9); z-index: 10; border-bottom: 2px solid var(--gold);
+        /* 控制盤 */
+        #controls {
+            position: absolute; bottom: 42%; right: 10px;
+            display: grid; grid-template-columns: repeat(3, 50px); grid-template-rows: repeat(2, 50px);
+            gap: 5px; z-index: 200;
         }
-        .stat-item { text-align: center; }
-        .stat-name { font-size: 11px; color: #888; display: block; }
-        .stat-val { font-size: 18px; font-weight: bold; color: var(--zen); }
-
-        /* 插畫呈現區 */
-        #visual-area {
-            flex: 1; position: relative; background: #e0f0f5; 
-            display: flex; justify-content: center; align-items: flex-end;
-            transition: background 1s;
+        .ctrl-btn { 
+            background: rgba(255,255,255,0.3); border: 1px solid #fff; color: white;
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            font-weight: bold; cursor: pointer; user-select: none;
         }
 
-        /* 內嵌 SVG 圖片樣式 */
-        .scene-svg { position: absolute; bottom: 0; width: 100%; height: auto; z-index: 1; }
-        .char-svg { width: 150px; height: 150px; z-index: 2; margin-bottom: 20px; transition: 0.5s; }
-
-        /* 對話框 */
-        #dialogue-container {
-            height: 100px; padding: 15px; background: white;
-            border-top: 4px solid var(--gold); z-index: 10;
+        /* 屬性與對話區 */
+        #ui-panel { flex: 1; background: #F2EFE9; padding: 15px; display: flex; flex-direction: column; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 10px; }
+        .stat-box { background: #e0dacc; padding: 5px 10px; border-radius: 5px; font-size: 14px; }
+        #dialogue { 
+            flex: 1; background: #fff; border: 2px solid #8B4513; border-radius: 10px; 
+            padding: 10px; font-size: 15px; color: #333; overflow-y: auto;
         }
-        #name-tag { font-weight: bold; color: var(--gold); margin-bottom: 5px; }
-        #text-content { font-size: 15px; line-height: 1.5; color: var(--ink); }
-
-        /* 操作按鈕 */
-        .action-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 10px;
-            background: #eee; z-index: 10;
-        }
-        button {
-            padding: 15px 5px; border: none; border-radius: 5px; 
-            background: var(--zen); color: white; font-size: 15px; cursor: pointer;
-        }
-        button:active { opacity: 0.8; transform: scale(0.98); }
-        .gold-btn { background: var(--gold); grid-column: span 2; }
     </style>
 </head>
 <body>
 
-<div id="game-screen">
-    <div class="stats-bar">
-        <div class="stat-item"><span class="stat-name">定力</span><span class="stat-val" id="d_v">10</span></div>
-        <div class="stat-item"><span class="stat-name">智慧</span><span class="stat-val" id="w_v">10</span></div>
-        <div class="stat-item"><span class="stat-name">福德</span><span class="stat-val" id="f_v">10</span></div>
-        <div class="stat-item"><span class="stat-name">行持</span><span class="stat-val" id="x_v">10</span></div>
-    </div>
-
-    <div id="visual-area">
-        <svg class="scene-svg" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
-            <rect width="400" height="200" fill="none"/>
-            <path d="M50 200 L50 100 L200 50 L350 100 L350 200 Z" fill="#8B4513" opacity="0.3"/>
-            <path d="M30 110 L200 30 L370 110 Z" fill="#2C2C2C"/>
-            <rect x="160" y="120" width="80" height="80" fill="#654321"/>
-        </svg>
-
-        <div id="char-container" class="char-svg">
-            <svg viewBox="0 0 100 100">
-                <circle cx="50" cy="40" r="25" fill="#FFDBAC"/>
-                <path d="M25 65 Q50 60 75 65 L80 95 L20 95 Z" id="robe-color" fill="#5D6D5E"/>
-                <circle cx="40" cy="35" r="2"/>
-                <circle cx="60" cy="35" r="2"/>
-                <path d="M45 45 Q50 48 55 45" stroke="black" fill="none"/>
-            </svg>
-        </div>
+<div id="game-container">
+    <div id="viewport">
+        <div class="obj temple">⛩️</div>
+        <div class="obj" style="left:50px; top:80px;">🌲</div>
+        <div class="obj" style="left:300px; top:150px;">🌲</div>
+        <div class="obj" style="left:80px; top:220px;">🪵</div>
+        <div class="obj" style="left:250px; top:50px;">📚</div>
         
-        <div id="lvl-tag" style="position:absolute; top:80px; right:20px; background:var(--gold); color:white; padding:5px 10px; border-radius:5px; font-size:12px;">小男生</div>
+        <div id="player">👦</div>
     </div>
 
-    <div id="dialogue-container">
-        <div id="name-tag">知客僧</div>
-        <div id="text-content">阿彌陀佛，歡迎來到普里禪寺。</div>
+    <div id="controls">
+        <div></div><div class="ctrl-btn" onclick="move(0, -20)">↑</div><div></div>
+        <div class="ctrl-btn" onclick="move(-20, 0)">←</div>
+        <div class="ctrl-btn" onclick="move(0, 20)">↓</div>
+        <div class="ctrl-btn" onclick="move(20, 0)">→</div>
     </div>
 
-    <div class="action-grid">
-        <button onclick="play('d', 5)">🧘 禪堂靜坐</button>
-        <button onclick="play('w', 5)">📚 藏經閣</button>
-        <button onclick="play('f', 4)">🧹 寺院出坡</button>
-        <button onclick="play('x', 4)">🕯️ 觀照自心</button>
-        <button class="gold-btn" onclick="play('bless', 8)">🙏 圓通寶殿大禮拜</button>
+    <div id="ui-panel">
+        <div class="stats-grid">
+            <div class="stat-box">定力: <b id="d">10</b></div>
+            <div class="stat-box">智慧: <b id="w">10</b></div>
+            <div class="stat-box">福德: <b id="f">10</b></div>
+            <div class="stat-box">行持: <b id="x">10</b></div>
+        </div>
+        <div id="dialogue">
+            <b>【引導】</b> 使用按鈕控制走動。靠近 ⛩️ 進入大殿，靠近 🪵 出坡掃地，靠近 📚 研讀佛典。
+        </div>
+        <div style="text-align: center; font-size: 12px; margin-top: 5px; color: #888;" id="lvl">小男生</div>
     </div>
 </div>
 
 <script>
-    let s = JSON.parse(localStorage.getItem('zen_img_v1')) || {
-        d:10, w:10, f:10, x:10, lvl:"小男生", dm:0
-    };
+    let pos = { x: 200, y: 200 };
+    let s = JSON.parse(localStorage.getItem('zen_rpg_v1')) || { d:10, w:10, f:10, x:10, lvl:"小男生" };
 
-    const dialogs = {
-        d: "你在大殿中靜靜坐下，耳邊傳來陣陣鐘聲... 定力增加了。",
-        w: "翻閱陳舊的梵文經典，你對生命有了新的體悟。智慧增加了。",
-        f: "拿起掃帚，將落葉一片片掃去。福德在勞動中增長。",
-        x: "夜深了，你獨自看著燭火，照見內心的雜念。行持提升。",
-        bless: "在金碧輝煌的殿堂前，你至誠頂禮。感覺法喜充滿！"
-    };
+    function move(dx, dy) {
+        // 更新位置
+        pos.x += dx;
+        pos.y += dy;
 
-    function play(type, val) {
-        if(type==='d') s.d += val;
-        else if(type==='w') s.w += val;
-        else if(type==='f') s.f += val;
-        else if(type==='x') s.x += val;
-        else if(type==='bless') { s.d+=3; s.w+=3; s.f+=3; }
+        // 邊界限制
+        pos.x = Math.max(0, Math.min(pos.x, 360));
+        pos.y = Math.max(0, Math.min(pos.y, 260));
 
-        // 視覺變換
-        document.getElementById('text-content').innerText = dialogs[type] || "修行中...";
-        document.getElementById('name-tag').innerText = "系統敘事";
+        const player = document.getElementById('player');
+        player.style.left = pos.x + 'px';
+        player.style.top = pos.y + 'px';
 
-        // 隨機開悟圖片效果
-        if(Math.random() < 0.1) {
-            document.getElementById('robe-color').setAttribute('fill', '#C5A059');
-            document.getElementById('text-content').innerText = "【機緣】一位老和尚對你微笑點頭。";
+        checkEvent();
+    }
+
+    function checkEvent() {
+        let msg = "";
+        // 碰撞偵測 (簡單距離判斷)
+        // ⛩️ 禪寺中心 (180, 50)
+        if (Math.abs(pos.x - 180) < 30 && Math.abs(pos.y - 50) < 30) {
+            s.d += 1; msg = "你進入了大殿靜坐，定力微升。";
+        }
+        // 🪵 木頭 (80, 220)
+        else if (Math.abs(pos.x - 80) < 30 && Math.abs(pos.y - 220) < 30) {
+            s.f += 1; msg = "你在樹林間勞作出坡，福德微升。";
+        }
+        // 📚 書本 (250, 50)
+        else if (Math.abs(pos.x - 250) < 30 && Math.abs(pos.y - 50) < 30) {
+            s.w += 1; msg = "你在此處研讀古籍，智慧微升。";
         }
 
-        checkLvl();
-        updateUI();
-    }
-
-    function checkLvl() {
-        const stats = [s.d, s.w, s.f, s.x];
-        const max = Math.max(...stats);
-        let nL = "小男生";
-        
-        if (s.d>=400 && s.w>=400 && s.f>=400 && s.x>=400) nL = "明心見性";
-        else if (stats.filter(v=>v>=200).length>=3) nL = "學長";
-        else if (max > 100) nL = "研經班";
-        else if (max > 40) nL = "中級班";
-        else nL = "小男生";
-
-        if(nL !== s.lvl) {
-            s.lvl = nL;
-            alert("✨ 境界提升！你已成為 " + nL);
+        if(msg) {
+            document.getElementById('dialogue').innerHTML = `<b>【事件】</b> ${msg}`;
+            updateStats();
         }
-        document.getElementById('lvl-tag').innerText = s.lvl;
+    }
+
+    function updateStats() {
+        document.getElementById('d').innerText = s.d;
+        document.getElementById('w').innerText = s.w;
+        document.getElementById('f').innerText = s.f;
+        document.getElementById('x').innerText = s.x;
         
-        // 根據境界改變角色顏色
-        if(s.lvl === "學長") document.getElementById('robe-color').setAttribute('fill', '#3D4F40');
-        if(s.lvl === "明心見性") document.getElementById('robe-color').setAttribute('fill', '#FFD700');
+        // 依照文件分數晉升
+        let mx = Math.max(s.d, s.w, s.f, s.x);
+        if(mx > 400) s.lvl = "總長";
+        else if(mx > 200) s.lvl = "學長";
+        else if(mx > 100) s.lvl = "研經班";
+        else if(mx > 40) s.lvl = "中級班";
+        
+        document.getElementById('lvl').innerText = s.lvl;
+        localStorage.setItem('zen_rpg_v1', JSON.stringify(s));
     }
 
-    function updateUI() {
-        document.getElementById('d_v').innerText = s.d;
-        document.getElementById('w_v').innerText = s.w;
-        document.getElementById('f_v').innerText = s.f;
-        document.getElementById('x_v').innerText = s.x;
-        localStorage.setItem('zen_img_v1', JSON.stringify(s));
-    }
-
-    updateUI();
+    // 初始化位置
+    move(0, 0);
 </script>
 </body>
 </html>
