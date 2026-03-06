@@ -3,156 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>少年禪修錄 - 成長版</title>
+    <title>少年禪修錄 - 插畫版</title>
     <style>
-        :root { --ink: #2C2C2C; --paper: #F2EFE9; --gold: #C5A059; --zen: #3D4F40; --red: #8B0000; }
-        body { font-family: "PingFang TC", serif; background-color: #D4C4A8; margin: 0; padding: 10px; display: flex; justify-content: center; -webkit-tap-highlight-color: transparent; }
-        .scroll { width: 100%; max-width: 450px; background: var(--paper); border-left: 12px solid #8B4513; border-right: 12px solid #8B4513; border-radius: 5px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); min-height: 95vh; box-sizing: border-box; display: flex; flex-direction: column; }
-        .header { text-align: center; margin-bottom: 10px; }
-        h2 { color: var(--zen); letter-spacing: 3px; margin: 10px 0; }
-        .status-card { background: rgba(197, 160, 89, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px dashed var(--gold); }
-        .badge { background: var(--gold); color: white; padding: 4px 15px; border-radius: 20px; font-size: 16px; font-weight: bold; display: inline-block; margin-bottom: 5px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .stat-box { background: rgba(255,255,255,0.5); padding: 8px; border-radius: 5px; text-align: center; }
-        .label { font-size: 13px; color: #666; display: block; }
-        .val { font-weight: bold; color: var(--ink); font-size: 20px; }
-        .actions { display: grid; gap: 10px; }
-        button { width: 100%; background: var(--zen); color: white; border: none; padding: 15px; border-radius: 8px; font-size: 16px; cursor: pointer; box-shadow: 0 4px 0 #2a382d; transition: 0.1s; }
-        button:active { transform: translateY(2px); box-shadow: 0 2px 0 #2a382d; }
-        #log { margin-top: 20px; padding: 15px; background: white; border-radius: 8px; font-style: italic; color: #555; min-height: 60px; border: 1px solid #eee; line-height: 1.5; flex-grow: 1; }
-        #demon-ui { background: #ffe6e6; color: var(--red); padding: 8px; text-align: center; border-radius: 5px; font-weight: bold; margin-bottom: 15px; display: none; animation: flash 1.5s infinite; }
-        @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        .footer { text-align: center; font-size: 11px; color: #999; margin-top: 20px; padding-bottom: 10px; }
+        :root { --ink: #2C2C2C; --paper: #F2EFE9; --gold: #C5A059; --zen: #3D4F40; }
+        body { font-family: "PingFang TC", serif; background-color: #1a1a1a; margin: 0; padding: 0; display: flex; justify-content: center; height: 100vh; }
+        
+        #game-screen {
+            width: 100%; max-width: 500px; height: 100%;
+            background: #F2EFE9; position: relative; display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        /* 頂部數據面板 */
+        .stats-bar {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+            padding: 15px; background: rgba(255,255,255,0.9); z-index: 10; border-bottom: 2px solid var(--gold);
+        }
+        .stat-item { text-align: center; }
+        .stat-name { font-size: 11px; color: #888; display: block; }
+        .stat-val { font-size: 18px; font-weight: bold; color: var(--zen); }
+
+        /* 插畫呈現區 */
+        #visual-area {
+            flex: 1; position: relative; background: #e0f0f5; 
+            display: flex; justify-content: center; align-items: flex-end;
+            transition: background 1s;
+        }
+
+        /* 內嵌 SVG 圖片樣式 */
+        .scene-svg { position: absolute; bottom: 0; width: 100%; height: auto; z-index: 1; }
+        .char-svg { width: 150px; height: 150px; z-index: 2; margin-bottom: 20px; transition: 0.5s; }
+
+        /* 對話框 */
+        #dialogue-container {
+            height: 100px; padding: 15px; background: white;
+            border-top: 4px solid var(--gold); z-index: 10;
+        }
+        #name-tag { font-weight: bold; color: var(--gold); margin-bottom: 5px; }
+        #text-content { font-size: 15px; line-height: 1.5; color: var(--ink); }
+
+        /* 操作按鈕 */
+        .action-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 10px;
+            background: #eee; z-index: 10;
+        }
+        button {
+            padding: 15px 5px; border: none; border-radius: 5px; 
+            background: var(--zen); color: white; font-size: 15px; cursor: pointer;
+        }
+        button:active { opacity: 0.8; transform: scale(0.98); }
+        .gold-btn { background: var(--gold); grid-column: span 2; }
     </style>
 </head>
 <body>
-<div class="scroll">
-    <div class="header">
-        <div class="badge" id="lvl_display">小男生</div>
-        <h2>少年禪修錄</h2>
+
+<div id="game-screen">
+    <div class="stats-bar">
+        <div class="stat-item"><span class="stat-name">定力</span><span class="stat-val" id="d_v">10</span></div>
+        <div class="stat-item"><span class="stat-name">智慧</span><span class="stat-val" id="w_v">10</span></div>
+        <div class="stat-item"><span class="stat-name">福德</span><span class="stat-val" id="f_v">10</span></div>
+        <div class="stat-item"><span class="stat-name">行持</span><span class="stat-val" id="x_v">10</span></div>
     </div>
 
-    <div class="status-card">
-        <div class="grid">
-            <div class="stat-box"><span class="label">定力</span><span class="val" id="d_val">10</span></div>
-            <div class="stat-box"><span class="label">智慧</span><span class="val" id="w_val">10</span></div>
-            <div class="stat-box"><span class="label">福德</span><span class="val" id="f_val">10</span></div>
-            <div class="stat-box"><span class="label">行持</span><span class="val" id="x_val">10</span></div>
+    <div id="visual-area">
+        <svg class="scene-svg" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="200" fill="none"/>
+            <path d="M50 200 L50 100 L200 50 L350 100 L350 200 Z" fill="#8B4513" opacity="0.3"/>
+            <path d="M30 110 L200 30 L370 110 Z" fill="#2C2C2C"/>
+            <rect x="160" y="120" width="80" height="80" fill="#654321"/>
+        </svg>
+
+        <div id="char-container" class="char-svg">
+            <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="40" r="25" fill="#FFDBAC"/>
+                <path d="M25 65 Q50 60 75 65 L80 95 L20 95 Z" id="robe-color" fill="#5D6D5E"/>
+                <circle cx="40" cy="35" r="2"/>
+                <circle cx="60" cy="35" r="2"/>
+                <path d="M45 45 Q50 48 55 45" stroke="black" fill="none"/>
+            </svg>
         </div>
+        
+        <div id="lvl-tag" style="position:absolute; top:80px; right:20px; background:var(--gold); color:white; padding:5px 10px; border-radius:5px; font-size:12px;">小男生</div>
     </div>
 
-    <div id="demon-ui">⚠️ 察覺心魔：修行越高，愈需謙卑</div>
-
-    <div class="actions">
-        <button onclick="train('ding', 3)">🧘 靜坐修行 (定力+3)</button>
-        <button onclick="train('wis', 5)">📜 研讀經文 (智慧+5)</button>
-        <button onclick="train('bow', 5)">🙏 誠心禮佛 (智/福+5)</button>
-        <button onclick="train('fu', 4)">🧹 寺院出坡 (福德+4)</button>
-        <button onclick="train('xing', 4)">🕯️ 內觀覺照 (行持+4)</button>
+    <div id="dialogue-container">
+        <div id="name-tag">知客僧</div>
+        <div id="text-content">阿彌陀佛，歡迎來到普里禪寺。</div>
     </div>
 
-    <div id="log">修行是一條沒有終點的路。🌿</div>
-
-    <div class="footer">
-        進度已保存於瀏覽器 | <span onclick="resetGame()" style="text-decoration:underline; cursor:pointer;">重置修行</span>
+    <div class="action-grid">
+        <button onclick="play('d', 5)">🧘 禪堂靜坐</button>
+        <button onclick="play('w', 5)">📚 藏經閣</button>
+        <button onclick="play('f', 4)">🧹 寺院出坡</button>
+        <button onclick="play('x', 4)">🕯️ 觀照自心</button>
+        <button class="gold-btn" onclick="play('bless', 8)">🙏 圓通寶殿大禮拜</button>
     </div>
 </div>
 
 <script>
-    // 初始化數據（移除 day 系統）
-    let state = JSON.parse(localStorage.getItem('zen_infinity_v1')) || {
-        ding: 10, wis: 10, fu: 10, xing: 10, lvl: "小男生", demon: 0
+    let s = JSON.parse(localStorage.getItem('zen_img_v1')) || {
+        d:10, w:10, f:10, x:10, lvl:"小男生", dm:0
     };
 
-    function train(type, val) {
-        // 屬性增加
-        if(type === 'ding') state.ding += val;
-        else if(type === 'wis') state.wis += val;
-        else if(type === 'bow') { state.wis += val; state.fu += val; }
-        else if(type === 'fu') state.fu += val;
-        else if(type === 'xing') state.xing += val;
+    const dialogs = {
+        d: "你在大殿中靜靜坐下，耳邊傳來陣陣鐘聲... 定力增加了。",
+        w: "翻閱陳舊的梵文經典，你對生命有了新的體悟。智慧增加了。",
+        f: "拿起掃帚，將落葉一片片掃去。福德在勞動中增長。",
+        x: "夜深了，你獨自看著燭火，照見內心的雜念。行持提升。",
+        bless: "在金碧輝煌的殿堂前，你至誠頂禮。感覺法喜充滿！"
+    };
 
-        // 心魔邏輯：總分越高，心魔累積越快
-        let total = state.ding + state.wis + state.fu + state.xing;
-        if(total > 200) state.demon += Math.floor(Math.random() * 10);
+    function play(type, val) {
+        if(type==='d') s.d += val;
+        else if(type==='w') s.w += val;
+        else if(type==='f') s.f += val;
+        else if(type==='x') s.x += val;
+        else if(type==='bless') { s.d+=3; s.w+=3; s.f+=3; }
 
-        let msg = "🌅 今日修行圓滿。";
-        
-        // 隨機事件
-        const r = Math.random();
-        if(r < 0.003) {
-            state.ding += 30; state.wis += 30; state.fu += 30; state.xing += 30;
-            msg = "🌟【開悟瞬間】你明白了什麼。四屬性大幅提升！";
-        } else if(r < 0.1) {
-            state.wis += 5; msg = "📜 聞法心得：智慧提升了。";
-        } else if(r < 0.15) {
-            state.xing -= 2; msg = "💤 稍有懈怠：行持略微下降。";
+        // 視覺變換
+        document.getElementById('text-content').innerText = dialogs[type] || "修行中...";
+        document.getElementById('name-tag').innerText = "系統敘事";
+
+        // 隨機開悟圖片效果
+        if(Math.random() < 0.1) {
+            document.getElementById('robe-color').setAttribute('fill', '#C5A059');
+            document.getElementById('text-content').innerText = "【機緣】一位老和尚對你微笑點頭。";
         }
 
-        // 心魔爆發
-        if(state.demon > 100) {
-            msg = "🏮【心魔爆發】因傲慢而退轉。智慧 -10，行持 -5。";
-            state.wis = Math.max(0, state.wis - 10);
-            state.xing = Math.max(0, state.xing - 5);
-            state.demon = 0;
-        }
-
-        updateLevel();
-        saveAndRefresh(msg);
+        checkLvl();
+        updateUI();
     }
 
-    function updateLevel() {
-        const stats = [state.ding, state.wis, state.fu, state.xing];
+    function checkLvl() {
+        const stats = [s.d, s.w, s.f, s.x];
         const max = Math.max(...stats);
-        const count200 = stats.filter(s => s >= 200).length;
-        const count400 = stats.filter(s => s >= 400).length;
+        let nL = "小男生";
         
-        let newLvl = "小男生";
+        if (s.d>=400 && s.w>=400 && s.f>=400 && s.x>=400) nL = "明心見性";
+        else if (stats.filter(v=>v>=200).length>=3) nL = "學長";
+        else if (max > 100) nL = "研經班";
+        else if (max > 40) nL = "中級班";
+        else nL = "小男生";
+
+        if(nL !== s.lvl) {
+            s.lvl = nL;
+            alert("✨ 境界提升！你已成為 " + nL);
+        }
+        document.getElementById('lvl-tag').innerText = s.lvl;
         
-        // 依照文件分數門檻升級
-        if (count400 >= 3) newLvl = "總長";
-        else if (count200 >= 3) newLvl = "學長";
-        else if (max > 100) newLvl = "研經班";
-        else if (max > 80) newLvl = "高級班";
-        else if (max > 40) newLvl = "中級班";
-        else if (max > 20) newLvl = "初級班";
-
-        // 特殊結局達成提示（無盡版改為成就達成）
-        if(state.ding >= 400 && state.wis >= 400 && state.fu >= 400 && state.xing >= 400 && state.lvl !== "明心見性") {
-            newLvl = "明心見性";
-            alert("🌟 恭喜！你已達成最高境界：明心見性！");
-        }
-
-        if(newLvl !== state.lvl && newLvl !== "明心見性") {
-            state.lvl = newLvl;
-            alert(`✨ 晉升！師父說：你可以進入「${newLvl}」修學了。`);
-        } else {
-            state.lvl = newLvl;
-        }
+        // 根據境界改變角色顏色
+        if(s.lvl === "學長") document.getElementById('robe-color').setAttribute('fill', '#3D4F40');
+        if(s.lvl === "明心見性") document.getElementById('robe-color').setAttribute('fill', '#FFD700');
     }
 
-    function saveAndRefresh(msg) {
-        document.getElementById('d_val').innerText = state.ding;
-        document.getElementById('w_val').innerText = state.wis;
-        document.getElementById('f_val').innerText = state.fu;
-        document.getElementById('x_val').innerText = state.xing;
-        document.getElementById('lvl_display').innerText = state.lvl;
-        if(msg) document.getElementById('log').innerText = msg;
-        
-        // 心魔警告顯示
-        document.getElementById('demon-ui').style.display = state.demon > 50 ? 'block' : 'none';
-        
-        localStorage.setItem('zen_infinity_v1', JSON.stringify(state));
+    function updateUI() {
+        document.getElementById('d_v').innerText = s.d;
+        document.getElementById('w_v').innerText = s.w;
+        document.getElementById('f_v').innerText = s.f;
+        document.getElementById('x_v').innerText = s.x;
+        localStorage.setItem('zen_img_v1', JSON.stringify(s));
     }
 
-    function resetGame() {
-        if(confirm("確定要重頭開始修行嗎？")) {
-            localStorage.removeItem('zen_infinity_v1');
-            location.reload();
-        }
-    }
-
-    saveAndRefresh();
+    updateUI();
 </script>
 </body>
 </html>
