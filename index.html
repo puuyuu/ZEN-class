@@ -5,88 +5,82 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>少年禪修錄 v3</title>
     <style>
-        :root { --ink: #2C2C2C; --paper: #F2EFE9; --gold: #C5A059; --zen: #3D4F40; --red: #8B0000; }
-        body { font-family: "PingFang TC", "STKaiti", serif; background-color: #D4C4A8; margin: 0; padding: 10px; display: flex; justify-content: center; -webkit-tap-highlight-color: transparent; }
-        .scroll { width: 100%; max-width: 450px; background: var(--paper); border-left: 12px solid #8B4513; border-right: 12px solid #8B4513; border-radius: 5px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); min-height: 95vh; box-sizing: border-box; }
+        :root { --ink: #2C2C2C; --paper: #F2EFE9; --gold: #C5A059; --zen: #3D4F40; }
+        body { font-family: "PingFang TC", serif; background-color: #D4C4A8; margin: 0; padding: 10px; display: flex; justify-content: center; }
+        .scroll { width: 100%; max-width: 450px; background: var(--paper); border-left: 12px solid #8B4513; border-right: 12px solid #8B4513; border-radius: 5px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); min-height: 90vh; box-sizing: border-box; }
         .status { background: rgba(197, 160, 89, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px dashed var(--gold); }
         .badge { background: var(--gold); color: white; padding: 2px 12px; border-radius: 15px; font-size: 14px; display: inline-block; margin-bottom: 10px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .val { font-weight: bold; color: var(--ink); font-size: 18px; }
-        #demon { background: #ffe6e6; color: var(--red); padding: 8px; text-align: center; border-radius: 5px; font-weight: bold; margin-bottom: 15px; display: none; animation: flash 1.5s infinite; }
-        @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        button { width: 100%; background: var(--zen); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; margin-bottom: 10px; cursor: pointer; box-shadow: 0 4px 0 #2a382d; transition: 0.1s; }
+        button { width: 100%; background: var(--zen); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; margin-bottom: 10px; cursor: pointer; box-shadow: 0 4px 0 #2a382d; }
         button:active { transform: translateY(2px); box-shadow: 0 2px 0 #2a382d; }
         #log { margin-top: 20px; padding: 15px; background: white; border-radius: 8px; font-style: italic; color: #555; min-height: 70px; border: 1px solid #eee; line-height: 1.5; }
-        .footer { text-align: center; font-size: 11px; color: #999; margin-top: 20px; }
     </style>
 </head>
 <body>
 <div class="scroll">
     <div style="text-align: center;"><div class="badge" id="lvl">小男生</div></div>
-    <h2 style="text-align: center; color: var(--zen); letter-spacing: 3px;">少年禪修錄</h2>
+    <h2 style="text-align: center; color: var(--zen);">少年禪修錄</h2>
     <div class="status">
         <div style="text-align: center; margin-bottom: 10px;">修行第 <span id="day" style="color:var(--gold); font-size: 22px; font-weight:bold;">1</span> / 60 天</div>
         <div class="grid">
-            <div>定力：<span class="val" id="d_val">10</span></div>
-            <div>智慧：<span class="val" id="w_val">10</span></div>
-            <div>福德：<span class="val" id="f_val">10</span></div>
-            <div>行持：<span class="val" id="x_val">10</span></div>
+            <div>定力：<span class="val" id="d_v">10</span></div>
+            <div>智慧：<span class="val" id="w_v">10</span></div>
+            <div>福德：<span class="val" id="f_v">10</span></div>
+            <div>行持：<span class="val" id="x_v">10</span></div>
         </div>
     </div>
-    <div id="demon">⚠️ 心魔叢生：過於傲慢，將損修行！</div>
-    <button onclick="play('ding',3)">🧘 靜坐 (定力+3)</button>
-    <button onclick="play('wis',5)">📜 誦經 (智慧+5)</button>
-    <button onclick="play('bow',5)">🙏 禮佛 (智/福+5)</button>
-    <button onclick="play('fu',4)">🧹 出坡 (福德+4)</button>
-    <button onclick="play('xing',4)">🕯️ 觀照 (行持+4)</button>
+    <div>
+        <button onclick="play('ding',3)">🧘 靜坐 (定力+3)</button>
+        <button onclick="play('wis',5)">📜 誦經 (智慧+5)</button>
+        <button onclick="play('bow',5)">🙏 禮佛 (智/福+5)</button>
+        <button onclick="play('fu',4)">🧹 出坡 (福德+4)</button>
+        <button onclick="play('xing',4)">🕯️ 觀照 (行持+4)</button>
+    </div>
     <div id="log">「菩提本無樹，明鏡亦非台。」🌿</div>
-    <div class="footer">進度已加密儲存於本機瀏覽器<br><span onclick="reset()" style="text-decoration:underline">重置進度</span></div>
 </div>
 <script>
-    let s = JSON.parse(localStorage.getItem('zen_puli_v3')) || {day:1, ding:10, wis:10, fu:10, xing:10, lvl:"小男生", dm:0};
+    let s = JSON.parse(localStorage.getItem('zen_v3_puli')) || {day:1, ding:10, wis:10, fu:10, xing:10, lvl:"小男生"};
     function play(t, v) {
         if(s.day > 60) return;
-        if(t==='ding') s.ding+=v; 
-        else if(t==='wis') s.wis+=v; 
-        else if(t==='bow'){s.wis+=v; s.fu+=v;} 
-        else if(t==='fu') s.fu+=v; 
-        else s.xing+=v;
-
-        if(s.ding>50||s.wis>50) s.dm += Math.floor(Math.random()*12);
-        let m = "🌅 又是清淨的一天，阿彌陀佛。";
-        if(Math.random()<0.003){ s.ding+=30; s.wis+=30; s.fu+=30; s.xing+=30; m="🌟 瞬間開悟！你明白了什麼。全屬性+30！"; }
-        if(s.dm > 80){ m="🏮【心魔】陷入名相之爭。智慧-10，行持-5"; s.wis-=10; s.xing-=5; s.dm=0; }
+        if(t==='ding') s.ding+=v; else if(t==='wis') s.wis+=v; 
+        else if(t==='bow'){s.wis+=v; s.fu+=v;} else if(t==='fu') s.fu+=v; else s.xing+=v;
+        
+        let m = "🌅 又是清淨的一天。";
+        if(Math.random()<0.003){ s.ding+=30; s.wis+=30; s.fu+=30; s.xing+=30; m="🌟 瞬間開悟！全屬性+30！"; }
         
         s.day++;
         checkLvl();
         up();
         document.getElementById('log').innerText = m;
-        if(s.day > 60) endGame();
+        if(s.day > 60) {
+            let mx = Math.max(s.ding, s.wis, s.fu, s.xing);
+            let ed = mx===s.wis?"大乘解行":mx===s.fu?"五明菩薩":mx===s.ding?"禪七行者":"護法會";
+            if(s.ding>=400&&s.wis>=400&&s.fu>=400&&s.xing>=400) ed="明心見性";
+            else if(s.ding>=150&&s.wis>=150&&s.fu>=150&&s.xing>=150) ed="發菩提心";
+            alert("修行期滿！結局："+ed);
+            localStorage.removeItem('zen_v3_puli');
+            location.reload();
+        }
     }
     function checkLvl() {
         let mx = Math.max(s.ding, s.wis, s.fu, s.xing);
-        let count200 = [s.ding, s.wis, s.fu, s.xing].filter(x=>x>=200).length;
-        if(s.ding>=400&&s.wis>=400&&s.fu>=400&&s.xing>=400) s.lvl="總長";
-        else if(count200>=3) s.lvl="學長";
-        else if(mx>100) s.lvl="研經班"; else if(mx>80) s.lvl="高級班"; else if(mx>40) s.lvl="中級班"; else if(mx>20) s.lvl="初級班";
+        let c200 = [s.ding, s.wis, s.fu, s.xing].filter(x=>x>=200).length;
+        let c400 = [s.ding, s.wis, s.fu, s.xing].filter(x=>x>=400).length;
+        
+        if(c400>=3) s.lvl="總長";
+        else if(c200>=3) s.lvl="學長";
+        else if(mx>100) s.lvl="研經班"; 
+        else if(mx>80) s.lvl="高級班"; 
+        else if(mx>40) s.lvl="中級班"; 
+        else if(mx>20) s.lvl="初級班";
     }
-    function endGame() {
-        let mx = Math.max(s.ding, s.wis, s.fu, s.xing);
-        let ed = "護法會";
-        if(s.ding>=400&&s.wis>=400) ed="明心見性";
-        else if(s.ding>=150&&s.wis>=150&&s.fu>=150) ed="發菩提心";
-        else if(mx===s.wis) ed="大乘解行"; else if(mx===s.fu) ed="五明菩薩"; else if(mx===s.ding) ed="禪七行者";
-        alert("修行期滿！結局：【"+ed+"】");
-        reset();
-    }
-    function reset(){ localStorage.removeItem('zen_puli_v3'); location.reload(); }
     function up() {
         document.getElementById('day').innerText = s.day;
-        document.getElementById('d_val').innerText = s.ding; document.getElementById('w_val').innerText = s.wis;
-        document.getElementById('f_val').innerText = s.fu; document.getElementById('x_val').innerText = s.xing;
+        document.getElementById('d_v').innerText = s.ding; document.getElementById('w_v').innerText = s.wis;
+        document.getElementById('f_v').innerText = s.fu; document.getElementById('x_v').innerText = s.xing;
         document.getElementById('lvl').innerText = s.lvl;
-        document.getElementById('demon').style.display = s.dm > 45 ? 'block' : 'none';
-        localStorage.setItem('zen_puli_v3', JSON.stringify(s));
+        localStorage.setItem('zen_v3_puli', JSON.stringify(s));
     }
     up();
 </script>
