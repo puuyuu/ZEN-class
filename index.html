@@ -3,147 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>少年禪修錄 - 仙劍風格版</title>
+    <title>少年禪修錄 - 像素移動版</title>
     <style>
-        body { margin: 0; background: #000; font-family: "PingFang TC", serif; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
-        #game-container { width: 100%; max-width: 500px; height: 100%; background: #333; display: flex; flex-direction: column; position: relative; }
+        body { margin: 0; background: #222; font-family: "PingFang TC", serif; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
         
-        /* 冒險走動區 */
-        #viewport { 
-            position: relative; width: 100%; height: 60%; 
-            background: #4A773C; /* 草地顏色 */
-            overflow: hidden; border-bottom: 4px solid #8B4513;
-        }
-        
-        /* 地圖裝飾 */
-        .obj { position: absolute; font-size: 30px; }
-        .temple { left: 180px; top: 50px; font-size: 60px; } /* 禪寺入口 */
-
-        /* 角色 */
-        #player { 
-            position: absolute; width: 40px; height: 40px; 
-            font-size: 35px; transition: 0.1s linear; 
-            display: flex; justify-content: center; align-items: center;
-            z-index: 100;
+        /* 遊戲畫布區 */
+        #game-canvas { 
+            background: #71aa34; /* 草地綠 */
+            display: block; width: 100%; height: 55%; touch-action: none;
         }
 
-        /* 控制盤 */
-        #controls {
-            position: absolute; bottom: 42%; right: 10px;
-            display: grid; grid-template-columns: repeat(3, 50px); grid-template-rows: repeat(2, 50px);
-            gap: 5px; z-index: 200;
-        }
-        .ctrl-btn { 
-            background: rgba(255,255,255,0.3); border: 1px solid #fff; color: white;
-            border-radius: 50%; display: flex; justify-content: center; align-items: center;
-            font-weight: bold; cursor: pointer; user-select: none;
+        /* 屬性與劇情區 */
+        #ui-panel { 
+            flex: 1; background: #F2EFE9; padding: 10px; border-top: 5px solid #8B4513;
+            box-sizing: border-box; display: flex; flex-direction: column;
         }
 
-        /* 屬性與對話區 */
-        #ui-panel { flex: 1; background: #F2EFE9; padding: 15px; display: flex; flex-direction: column; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 10px; }
-        .stat-box { background: #e0dacc; padding: 5px 10px; border-radius: 5px; font-size: 14px; }
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 8px; }
+        .stat-box { background: #fff; border: 1px solid #ccc; text-align: center; padding: 3px; border-radius: 4px; }
+        .stat-label { font-size: 10px; color: #666; display: block; }
+        .stat-val { font-size: 14px; font-weight: bold; color: #3D4F40; }
+
         #dialogue { 
-            flex: 1; background: #fff; border: 2px solid #8B4513; border-radius: 10px; 
-            padding: 10px; font-size: 15px; color: #333; overflow-y: auto;
+            flex: 1; background: #fff; border: 2px solid #8B4513; border-radius: 8px;
+            padding: 10px; font-size: 15px; overflow-y: auto; line-height: 1.4;
         }
+
+        /* 虛擬搖桿 */
+        .controls {
+            position: absolute; right: 20px; top: 30%;
+            display: grid; grid-template-columns: repeat(3, 50px); gap: 8px;
+        }
+        .btn { 
+            width: 50px; height: 50px; background: rgba(255,255,255,0.6); 
+            border: 2px solid #333; border-radius: 50%; display: flex; 
+            justify-content: center; align-items: center; font-weight: bold;
+        }
+        .btn:active { background: #C5A059; }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div id="viewport">
-        <div class="obj temple">⛩️</div>
-        <div class="obj" style="left:50px; top:80px;">🌲</div>
-        <div class="obj" style="left:300px; top:150px;">🌲</div>
-        <div class="obj" style="left:80px; top:220px;">🪵</div>
-        <div class="obj" style="left:250px; top:50px;">📚</div>
-        
-        <div id="player">👦</div>
-    </div>
+<canvas id="game-canvas"></canvas>
 
-    <div id="controls">
-        <div></div><div class="ctrl-btn" onclick="move(0, -20)">↑</div><div></div>
-        <div class="ctrl-btn" onclick="move(-20, 0)">←</div>
-        <div class="ctrl-btn" onclick="move(0, 20)">↓</div>
-        <div class="ctrl-btn" onclick="move(20, 0)">→</div>
-    </div>
+<div class="controls">
+    <div></div><div class="btn" onclick="movePlayer(0, -15)">↑</div><div></div>
+    <div class="btn" onclick="movePlayer(-15, 0)">←</div><div class="btn" onclick="movePlayer(0, 15)">↓</div><div class="btn" onclick="movePlayer(15, 0)">→</div>
+</div>
 
-    <div id="ui-panel">
-        <div class="stats-grid">
-            <div class="stat-box">定力: <b id="d">10</b></div>
-            <div class="stat-box">智慧: <b id="w">10</b></div>
-            <div class="stat-box">福德: <b id="f">10</b></div>
-            <div class="stat-box">行持: <b id="x">10</b></div>
-        </div>
-        <div id="dialogue">
-            <b>【引導】</b> 使用按鈕控制走動。靠近 ⛩️ 進入大殿，靠近 🪵 出坡掃地，靠近 📚 研讀佛典。
-        </div>
-        <div style="text-align: center; font-size: 12px; margin-top: 5px; color: #888;" id="lvl">小男生</div>
+<div id="ui-panel">
+    <div class="stats">
+        <div class="stat-box"><span class="stat-label">定力</span><span class="stat-val" id="d">10</span></div>
+        <div class="stat-box"><span class="stat-label">智慧</span><span class="stat-val" id="w">10</span></div>
+        <div class="stat-box"><span class="stat-label">福德</span><span class="stat-val" id="f">10</span></div>
+        <div class="stat-box"><span class="stat-label">行持</span><span class="stat-val" id="x">10</span></div>
     </div>
+    <div id="dialogue"><b>【系統】</b> 歡迎來到普里禪寺。請控制角色走動，靠近建築物進行修行。</div>
+    <div style="text-align: center; font-size: 11px; margin-top: 5px; color: #888;" id="lvl-txt">當前境界：小男生</div>
 </div>
 
 <script>
-    let pos = { x: 200, y: 200 };
-    let s = JSON.parse(localStorage.getItem('zen_rpg_v1')) || { d:10, w:10, f:10, x:10, lvl:"小男生" };
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // 初始化遊戲狀態
+    let s = JSON.parse(localStorage.getItem('zen_canvas_v1')) || { d:10, w:10, f:10, x:10, lvl:"小男生" };
+    let player = { x: 50, y: 150, size: 30 };
 
-    function move(dx, dy) {
-        // 更新位置
-        pos.x += dx;
-        pos.y += dy;
+    // 地圖物件
+    const objects = [
+        { x: 150, y: 50, w: 100, h: 80, color: '#8B4513', label: '大殿', type: 'ding' },
+        { x: 40, y: 40, w: 60, h: 60, color: '#5D6D5E', label: '藏經閣', type: 'wis' },
+        { x: 250, y: 180, w: 80, h: 60, color: '#A0522D', label: '後山', type: 'fu' }
+    ];
+
+    function init() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight * 0.55;
+        draw();
+    }
+
+    function draw() {
+        // 1. 清空畫布 (畫草地)
+        ctx.fillStyle = "#71aa34";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 2. 畫路徑
+        ctx.fillStyle = "#d2b48c";
+        ctx.fillRect(0, 140, canvas.width, 40);
+        ctx.fillRect(180, 0, 40, canvas.height);
+
+        // 3. 畫建築物
+        objects.forEach(obj => {
+            ctx.fillStyle = obj.color;
+            ctx.fillRect(obj.x, obj.y, obj.w, obj.h);
+            ctx.fillStyle = "white";
+            ctx.font = "14px Arial";
+            ctx.fillText(obj.label, obj.x + 10, obj.y + 30);
+        });
+
+        // 4. 畫玩家 (小僧人)
+        ctx.fillStyle = "#ffdbac"; // 皮膚色
+        ctx.beginPath();
+        ctx.arc(player.x, player.y - 15, 10, 0, Math.PI * 2); // 頭
+        ctx.fill();
+        ctx.fillStyle = s.lvl === "學長" ? "#3D4F40" : "#888"; // 衣服色隨等級變
+        ctx.fillRect(player.x - 12, player.y - 5, 24, 20); // 身體
+        
+        // 畫玩家腳下陰影
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.beginPath();
+        ctx.ellipse(player.x, player.y + 15, 12, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    function movePlayer(dx, dy) {
+        player.x += dx;
+        player.y += dy;
 
         // 邊界限制
-        pos.x = Math.max(0, Math.min(pos.x, 360));
-        pos.y = Math.max(0, Math.min(pos.y, 260));
+        player.x = Math.max(20, Math.min(player.x, canvas.width - 20));
+        player.y = Math.max(20, Math.min(player.y, canvas.height - 20));
 
-        const player = document.getElementById('player');
-        player.style.left = pos.x + 'px';
-        player.style.top = pos.y + 'px';
-
-        checkEvent();
+        checkInteraction();
+        draw();
     }
 
-    function checkEvent() {
-        let msg = "";
-        // 碰撞偵測 (簡單距離判斷)
-        // ⛩️ 禪寺中心 (180, 50)
-        if (Math.abs(pos.x - 180) < 30 && Math.abs(pos.y - 50) < 30) {
-            s.d += 1; msg = "你進入了大殿靜坐，定力微升。";
-        }
-        // 🪵 木頭 (80, 220)
-        else if (Math.abs(pos.x - 80) < 30 && Math.abs(pos.y - 220) < 30) {
-            s.f += 1; msg = "你在樹林間勞作出坡，福德微升。";
-        }
-        // 📚 書本 (250, 50)
-        else if (Math.abs(pos.x - 250) < 30 && Math.abs(pos.y - 50) < 30) {
-            s.w += 1; msg = "你在此處研讀古籍，智慧微升。";
-        }
-
-        if(msg) {
-            document.getElementById('dialogue').innerHTML = `<b>【事件】</b> ${msg}`;
-            updateStats();
-        }
+    function checkInteraction() {
+        objects.forEach(obj => {
+            // 檢查玩家是否在建築物範圍內
+            if (player.x > obj.x && player.x < obj.x + obj.w &&
+                player.y > obj.y && player.y < obj.y + obj.h) {
+                
+                let msg = "";
+                if(obj.type === 'ding') { s.d += 1; msg = "你在【大殿】靜坐，定力緩緩提升。"; }
+                if(obj.type === 'wis') { s.w += 1; msg = "你在【藏經閣】翻閱古卷，心生智慧。"; }
+                if(obj.type === 'fu') { s.f += 1; msg = "你在【後山】辛勤勞作，廣植福德。"; }
+                
+                document.getElementById('dialogue').innerHTML = `<b>【事件】</b> ${msg}`;
+                updateUI();
+            }
+        });
     }
 
-    function updateStats() {
+    function updateUI() {
         document.getElementById('d').innerText = s.d;
         document.getElementById('w').innerText = s.w;
         document.getElementById('f').innerText = s.f;
         document.getElementById('x').innerText = s.x;
+
+        // 晉升邏輯
+        const max = Math.max(s.d, s.w, s.f, s.x);
+        if(max > 400) s.lvl = "總長";
+        else if(max > 200) s.lvl = "學長";
+        else if(max > 100) s.lvl = "研經班";
+        else if(max > 40) s.lvl = "中級班";
         
-        // 依照文件分數晉升
-        let mx = Math.max(s.d, s.w, s.f, s.x);
-        if(mx > 400) s.lvl = "總長";
-        else if(mx > 200) s.lvl = "學長";
-        else if(mx > 100) s.lvl = "研經班";
-        else if(mx > 40) s.lvl = "中級班";
-        
-        document.getElementById('lvl').innerText = s.lvl;
-        localStorage.setItem('zen_rpg_v1', JSON.stringify(s));
+        document.getElementById('lvl-txt').innerText = `當前境界：${s.lvl}`;
+        localStorage.setItem('zen_canvas_v1', JSON.stringify(s));
     }
 
-    // 初始化位置
-    move(0, 0);
+    // 支援點擊螢幕移動
+    canvas.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const tx = touch.clientX - rect.left;
+        const ty = touch.clientY - rect.top;
+        
+        // 算出點擊方向
+        const dx = tx > player.x ? 15 : -15;
+        const dy = ty > player.y ? 15 : -15;
+        movePlayer(dx, dy);
+    });
+
+    window.addEventListener('resize', init);
+    init();
+    updateUI();
 </script>
 </body>
 </html>
