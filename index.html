@@ -3,92 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>少年禪修錄 v3</title>
+    <title>少年禪修錄 - 全場景情境修復版</title>
     <style>
-        :root { --ink: #2C2C2C; --paper: #F2EFE9; --gold: #C5A059; --zen: #3D4F40; --red: #8B0000; }
-        body { font-family: "PingFang TC", "STKaiti", serif; background-color: #D4C4A8; margin: 0; padding: 10px; display: flex; justify-content: center; -webkit-tap-highlight-color: transparent; }
-        .scroll { width: 100%; max-width: 450px; background: var(--paper); border-left: 12px solid #8B4513; border-right: 12px solid #8B4513; border-radius: 5px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); min-height: 95vh; box-sizing: border-box; }
-        .status { background: rgba(197, 160, 89, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px dashed var(--gold); }
-        .badge { background: var(--gold); color: white; padding: 2px 12px; border-radius: 15px; font-size: 14px; display: inline-block; margin-bottom: 10px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .val { font-weight: bold; color: var(--ink); font-size: 18px; }
-        #demon { background: #ffe6e6; color: var(--red); padding: 8px; text-align: center; border-radius: 5px; font-weight: bold; margin-bottom: 15px; display: none; animation: flash 1.5s infinite; }
-        @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        button { width: 100%; background: var(--zen); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; margin-bottom: 10px; cursor: pointer; box-shadow: 0 4px 0 #2a382d; transition: 0.1s; }
-        button:active { transform: translateY(2px); box-shadow: 0 2px 0 #2a382d; }
-        #log { margin-top: 20px; padding: 15px; background: white; border-radius: 8px; font-style: italic; color: #555; min-height: 70px; border: 1px solid #eee; line-height: 1.5; }
-        .footer { text-align: center; font-size: 11px; color: #999; margin-top: 20px; }
+        :root { --ink: #2C2C2C; --paper: #F2EFE9; --gold: #C5A059; --zen: #3D4F40; }
+        body { margin: 0; background: #1a1a1a; font-family: "PingFang TC", serif; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
+        #game-canvas { background: #71aa34; display: block; width: 100%; height: 50%; touch-action: none; }
+        #ui-panel { flex: 1; background: var(--paper); border-top: 4px solid #8B4513; display: flex; flex-direction: column; padding: 10px; box-sizing: border-box; position: relative; }
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 5px; }
+        .stat-box { background: #fff; border: 1px solid var(--gold); text-align: center; padding: 3px; border-radius: 5px; font-size: 13px; }
+        .stat-val { font-weight: bold; color: var(--zen); }
+        #display-area { flex: 1; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+        #dialogue { background: rgba(255,255,255,0.8); padding: 10px; border-radius: 8px; font-size: 15px; border: 1px solid #ddd; min-height: 45px; line-height: 1.4; }
+        #action-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .menu-btn { background: var(--zen); color: white; border: none; padding: 12px 5px; border-radius: 5px; font-size: 14px; cursor: pointer; }
+        .menu-btn.bad { background: #A63D40; }
+        .controls { position: absolute; right: 10px; top: -145px; display: grid; grid-template-columns: repeat(3, 46px); gap: 5px; }
+        .btn { width: 46px; height: 46px; background: rgba(255,255,255,0.8); border: 1.5px solid #333; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; user-select: none; }
+        #scene-title { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); color: #fff; padding: 2px 12px; border-radius: 15px; font-size: 13px; z-index: 10; }
     </style>
 </head>
 <body>
-<div class="scroll">
-    <div style="text-align: center;"><div class="badge" id="lvl">小男生</div></div>
-    <h2 style="text-align: center; color: var(--zen); letter-spacing: 3px;">少年禪修錄</h2>
-    <div class="status">
-        <div style="text-align: center; margin-bottom: 10px;">修行第 <span id="day" style="color:var(--gold); font-size: 22px; font-weight:bold;">1</span> / 60 天</div>
-        <div class="grid">
-            <div>定力：<span class="val" id="d_val">10</span></div>
-            <div>智慧：<span class="val" id="w_val">10</span></div>
-            <div>福德：<span class="val" id="f_val">10</span></div>
-            <div>行持：<span class="val" id="x_val">10</span></div>
-        </div>
-    </div>
-    <div id="demon">⚠️ 心魔叢生：過於傲慢，將損修行！</div>
-    <button onclick="play('ding',3)">🧘 靜坐 (定力+3)</button>
-    <button onclick="play('wis',5)">📜 誦經 (智慧+5)</button>
-    <button onclick="play('bow',5)">🙏 禮佛 (智/福+5)</button>
-    <button onclick="play('fu',4)">🧹 出坡 (福德+4)</button>
-    <button onclick="play('xing',4)">🕯️ 觀照 (行持+4)</button>
-    <div id="log">「菩提本無樹，明鏡亦非台。」🌿</div>
-    <div class="footer">進度已加密儲存於本機瀏覽器<br><span onclick="reset()" style="text-decoration:underline">重置進度</span></div>
-</div>
-<script>
-    let s = JSON.parse(localStorage.getItem('zen_puli_v3')) || {day:1, ding:10, wis:10, fu:10, xing:10, lvl:"小男生", dm:0};
-    function play(t, v) {
-        if(s.day > 60) return;
-        if(t==='ding') s.ding+=v; 
-        else if(t==='wis') s.wis+=v; 
-        else if(t==='bow'){s.wis+=v; s.fu+=v;} 
-        else if(t==='fu') s.fu+=v; 
-        else s.xing+=v;
 
-        if(s.ding>50||s.wis>50) s.dm += Math.floor(Math.random()*12);
-        let m = "🌅 又是清淨的一天，阿彌陀佛。";
-        if(Math.random()<0.003){ s.ding+=30; s.wis+=30; s.fu+=30; s.xing+=30; m="🌟 瞬間開悟！你明白了什麼。全屬性+30！"; }
-        if(s.dm > 80){ m="🏮【心魔】陷入名相之爭。智慧-10，行持-5"; s.wis-=10; s.xing-=5; s.dm=0; }
+<div id="scene-title">位置：載入中...</div>
+<canvas id="game-canvas"></canvas>
+
+<div id="ui-panel">
+    <div class="controls">
+        <div></div><div class="btn" onclick="move(0,-25)">↑</div><div></div>
+        <div class="btn" onclick="move(-25,0)">←</div><div class="btn" onclick="move(0,25)">↓</div><div class="btn" onclick="move(25,0)">→</div>
+    </div>
+    <div class="stats">
+        <div class="stat-box">定 <span class="stat-val" id="d">10</span></div>
+        <div class="stat-box">智 <span class="stat-val" id="w">10</span></div>
+        <div class="stat-box">福 <span class="stat-val" id="f">10</span></div>
+        <div class="stat-box">行 <span class="stat-val" id="x">10</span></div>
+    </div>
+    <div id="display-area">
+        <div id="dialogue"><b>【系統】</b> 正在進入寺院... </div>
+        <div id="action-menu"></div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // --- 圖片定義 (加上隨機參數強制刷新) ---
+    const v = "?v=" + Date.now();
+    const imgs = {
+        boy: new Image(), niche: new Image(), burner: new Image(),
+        futon: new Image(), bookcase: new Image(),
+        standBuddha: new Image(), garden: new Image(), tree: new Image()
+    };
+    imgs.boy.src = 'boy.png' + v;
+    imgs.niche.src = 'buddhist niche.png' + v;
+    imgs.burner.src = 'incense burner.png' + v;
+    imgs.futon.src = 'futon.png' + v;
+    imgs.bookcase.src = 'bookcase.png' + v;
+    imgs.standBuddha.src = 'stand_buddha.png' + v;
+    imgs.garden.src = 'garden.png' + v;
+    imgs.tree.src = 'tree.png' + v;
+
+    let s = JSON.parse(localStorage.getItem('zen_v14')) || { d:10, w:10, f:10, x:10 };
+    let player = { x: 150, y: 150 };
+    let currentScene = 'world';
+
+    const mapData = {
+        world: { bg: '#71aa34', name: '院落步道', objs: [
+            { x: 30, y: 30, w: 70, h: 60, color: '#5D6D5E', label: '藏經閣', to: 'library' },
+            { x: 160, y: 20, w: 90, h: 70, color: '#8B4513', label: '大殿', to: 'temple' },
+            { x: 250, y: 160, w: 80, h: 70, color: '#225522', label: '後山', to: 'backhill' }
+        ]},
+        library: { bg: '#e5d5b5', name: '藏經閣', objs: [
+            { x: 50, y: 30, w: 60, h: 100, img: imgs.bookcase, label: '書櫃', type: 'books' },
+            { x: 150, y: 80, w: 60, h: 40, color: '#8B4513', label: '書桌', type: 'study' }
+        ]},
+        temple: { bg: '#4a2211', name: '大雄寶殿', objs: [
+            { x: 130, y: 20, w: 100, h: 100, img: imgs.niche, label: '佛像', type: 'buddha' },
+            { x: 165, y: 110, w: 40, h: 30, img: imgs.burner, label: '香爐', type: 'incense' },
+            { x: 20, y: 20, w: 50, h: 50, color: '#ADD8E6', label: '窗戶', type: 'window' },
+            { x: 100, y: 150, w: 40, h: 20, img: imgs.futon, label: '蒲團', type: 'sit' }
+        ]},
+        backhill: { bg: '#3a5a3a', name: '後山', objs: [
+            { x: 100, y: 30, w: 60, h: 100, img: imgs.standBuddha, label: '站立佛像', type: 'stand_buddha' },
+            { x: 220, y: 40, w: 100, h: 100, img: imgs.garden, label: '菜園', type: 'garden' },
+            { x: 30, y: 120, w: 80, h: 100, img: imgs.tree, label: '大樹', type: 'tree' }
+        ]}
+    };
+
+    function draw() {
+        const sc = mapData[currentScene];
+        document.getElementById('scene-title').innerText = "位置：" + sc.name;
+        ctx.fillStyle = sc.bg;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        sc.objs.forEach(obj => {
+            if (obj.img && obj.img.complete && obj.img.naturalWidth !== 0) {
+                ctx.drawImage(obj.img, obj.x, obj.y, obj.w, obj.h);
+            } else {
+                ctx.fillStyle = obj.color || "rgba(255,255,255,0.2)";
+                ctx.fillRect(obj.x, obj.y, obj.w, obj.h);
+            }
+            ctx.fillStyle = "#fff";
+            ctx.fillText(obj.label, obj.x, obj.y - 5);
+        });
+
+        if (imgs.boy.complete && imgs.boy.naturalWidth !== 0) {
+            ctx.drawImage(imgs.boy, player.x - 20, player.y - 45, 40, 50);
+        } else {
+            ctx.fillStyle = "#ffdbac";
+            ctx.beginPath(); ctx.arc(player.x, player.y - 15, 10, 0, Math.PI*2); ctx.fill();
+        }
+    }
+
+    function move(dx, dy) {
+        player.x += dx; player.y += dy;
+        player.x = Math.max(15, Math.min(player.x, canvas.width-15));
+        if (currentScene !== 'world' && player.y > canvas.height - 10) {
+            currentScene = 'world'; player.y = 150; 
+            log("回到了院落。");
+        } else {
+            player.y = Math.max(15, Math.min(player.y, canvas.height-5));
+        }
+        checkCollision();
+        draw();
+    }
+
+    function checkCollision() {
+        const sc = mapData[currentScene];
+        let found = false;
+        sc.objs.forEach(obj => {
+            if (player.x > obj.x-35 && player.x < obj.x+obj.w+35 && player.y > obj.y-35 && player.y < obj.y+obj.h+35) {
+                showMenu(obj); found = true;
+            }
+        });
+        if(!found) {
+            document.getElementById('action-menu').innerHTML = "";
+            document.getElementById('action-menu').removeAttribute('data-active');
+        }
+    }
+
+    function showMenu(obj) {
+        const menu = document.getElementById('action-menu');
+        const activeKey = obj.type || obj.label;
+        if(menu.getAttribute('data-active') === activeKey) return;
         
-        s.day++;
-        checkLvl();
-        up();
-        document.getElementById('log').innerText = m;
-        if(s.day > 60) endGame();
+        menu.innerHTML = "";
+        menu.setAttribute('data-active', activeKey);
+        let opts = [];
+
+        if(obj.to) opts.push({n: `進入${obj.label}`, fn: () => { currentScene=obj.to; player.y=canvas.height-40; draw(); }});
+        
+        // --- 藏經閣 (書櫃 & 書桌) ---
+        if(obj.type === 'books' || obj.type === 'study') {
+            opts.push({n: "背誦《心經》(+5)", fn: () => update('w',5,'研讀心經中。')});
+            opts.push({n: "背誦《大悲咒》(+5)", fn: () => update('w',5,'持誦大悲咒。')});
+            opts.push({n: "抄寫經典 (+10)", fn: () => update('d',10,'至誠抄經修行。')});
+            opts.push({n: "打瞌睡 (-5)", fn: () => update('w',-5,'書房內昏沉。', true)});
+        }
+
+        // --- 大殿 ---
+        if(obj.type === 'buddha') {
+            opts.push({n: "禮佛一拜 (+10)", fn: () => update('d',10,'至誠禮拜。')});
+            opts.push({n: "擦拭佛龕 (+5)", fn: () => update('f',5,'勤修供養。')});
+        }
+        if(obj.type === 'incense') {
+            opts.push({n: "上香供養 (+5)", fn: () => update('f',5,'上香禮佛。')});
+        }
+        if(obj.type === 'sit') {
+            opts.push({n: "禪坐 (+10)", fn: () => update('d',10,'靜坐息慮。')});
+        }
+
+        // --- 後山 ---
+        if(obj.type === 'garden') {
+            opts.push({n: "澆水拔草 (+5)", fn: () => update('f',5,'整理菜園。')});
+        }
+        if(obj.type === 'tree') {
+            opts.push({n: "掃除落葉 (+5)", fn: () => update('f',5,'掃除塵垢。')});
+        }
+
+        opts.forEach(o => {
+            const b = document.createElement('button');
+            b.className = "menu-btn" + (o.bad ? " bad" : "");
+            b.innerText = o.n;
+            b.onclick = o.fn;
+            menu.appendChild(b);
+        });
     }
-    function checkLvl() {
-        let mx = Math.max(s.ding, s.wis, s.fu, s.xing);
-        let count200 = [s.ding, s.wis, s.fu, s.xing].filter(x=>x>=200).length;
-        if(s.ding>=400&&s.wis>=400&&s.fu>=400&&s.xing>=400) s.lvl="總長";
-        else if(count200>=3) s.lvl="學長";
-        else if(mx>100) s.lvl="研經班"; else if(mx>80) s.lvl="高級班"; else if(mx>40) s.lvl="中級班"; else if(mx>20) s.lvl="初級班";
+
+    function update(type, val, msg, isBad = false) {
+        s[type] += val;
+        log(isBad ? `<span style="color:red">【事件】${msg}</span>` : `<b>【修行】</b>${msg}`);
+        updateUI();
     }
-    function endGame() {
-        let mx = Math.max(s.ding, s.wis, s.fu, s.xing);
-        let ed = "護法會";
-        if(s.ding>=400&&s.wis>=400) ed="明心見性";
-        else if(s.ding>=150&&s.wis>=150&&s.fu>=150) ed="發菩提心";
-        else if(mx===s.wis) ed="大乘解行"; else if(mx===s.fu) ed="五明菩薩"; else if(mx===s.ding) ed="禪七行者";
-        alert("修行期滿！結局：【"+ed+"】");
-        reset();
+
+    function log(m) { document.getElementById('dialogue').innerHTML = m; }
+
+    function updateUI() {
+        document.getElementById('d').innerText = Math.floor(s.d);
+        document.getElementById('w').innerText = Math.floor(s.w);
+        document.getElementById('f').innerText = Math.floor(s.f);
+        document.getElementById('x').innerText = Math.floor(s.x);
+        localStorage.setItem('zen_v14', JSON.stringify(s));
     }
-    function reset(){ localStorage.removeItem('zen_puli_v3'); location.reload(); }
-    function up() {
-        document.getElementById('day').innerText = s.day;
-        document.getElementById('d_val').innerText = s.ding; document.getElementById('w_val').innerText = s.wis;
-        document.getElementById('f_val').innerText = s.fu; document.getElementById('x_val').innerText = s.xing;
-        document.getElementById('lvl').innerText = s.lvl;
-        document.getElementById('demon').style.display = s.dm > 45 ? 'block' : 'none';
-        localStorage.setItem('zen_puli_v3', JSON.stringify(s));
+
+    function init() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight * 0.5;
+        draw();
     }
-    up();
+    window.addEventListener('resize', init);
+    init();
+    setInterval(draw, 600);
 </script>
 </body>
 </html>
